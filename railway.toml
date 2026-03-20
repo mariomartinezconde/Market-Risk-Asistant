@@ -1,50 +1,9 @@
-"""Structured logging setup."""
-from __future__ import annotations
-import json
-import logging
-import structlog
-from datetime import datetime
-from pathlib import Path
-from typing import Any
-
-
-def configure_logging(debug: bool = False) -> None:
-    level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(level=level, format="%(message)s")
-    structlog.configure(
-        processors=[
-            structlog.contextvars.merge_contextvars,
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.format_exc_info,
-            structlog.processors.JSONRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(level),
-        logger_factory=structlog.PrintLoggerFactory(),
-    )
-
-
-def get_logger(name: str) -> structlog.BoundLogger:
-    return structlog.get_logger(name)
-
-
-class AuditLogger:
-    def __init__(self, log_path: Path) -> None:
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        self.log_path = log_path
-
-    def log(self, event: dict[str, Any]) -> None:
-        record = {"audit_ts": datetime.utcnow().isoformat(), **event}
-        with open(self.log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
-
-
-_audit: AuditLogger | None = None
-
-
-def get_audit_logger() -> AuditLogger:
-    global _audit
-    if _audit is None:
-        from app.core.config import get_settings
-        _audit = AuditLogger(get_settings().audit_log_path)
-    return _audit
+[build]
+builder = "NIXPACKS"
+ 
+[deploy]
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
