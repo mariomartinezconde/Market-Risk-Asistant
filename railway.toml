@@ -1,0 +1,25 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[environments.production.variables]
+APP_ENV = "production"
+DEBUG = "false"
+CLAUDE_MODEL = "claude-opus-4-5"
+CLAUDE_TEMPERATURE = "0.0"
+TOP_K_RETRIEVAL = "8"
+MIN_SIMILARITY_SCORE = "0.35"
+CHUNK_SIZE = "512"
+CHUNK_OVERLAP = "64"
+CONFLICT_DETECTION_ENABLED = "true"
+REQUIRE_CITATIONS = "true"
+AUDIT_LOG_PATH = "/data/logs/audit.jsonl"
+FAISS_INDEX_PATH = "/data/faiss_index"
+FAISS_METADATA_PATH = "/data/faiss_metadata.json"
+DATA_DIR = "/data/documents"
